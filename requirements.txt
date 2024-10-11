@@ -1,0 +1,7 @@
+pydantic
+pymongo
+spotipy
+docker
+python-dotenv
+tqdm
+# librosa : will be later usefull
