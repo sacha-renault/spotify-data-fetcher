@@ -8,11 +8,15 @@ from .pytype import Track
 def cast_as_track(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        return [Track.model_validate(document) for document in func(*args, **kwargs)]
+        result = func(*args, **kwargs)
+        if isinstance(result, list):
+            return [Track.model_validate(document) for document in result]
+        elif result is not None:
+            return Track.model_validate(result)
+        return None
     return wrapper
 
 class TrackDatabase:
-
     def __init__(self, db_uri: str, db_name: str, collection_name: str) -> None:
         # Initialize the MongoDB client and database
         self._client = MongoClient(db_uri)
@@ -42,14 +46,24 @@ class TrackDatabase:
         return num_failed
 
     @cast_as_track
-    def get_by_id(self, track_id: str) -> List[Track]:
+    def get_by_id(self, track_id: str) -> Track | None:
         # Search for track by ID
-        return list(self._collection.find({'id': track_id}))
+        return self._collection.find_one({'id': track_id})
 
     @cast_as_track
-    def query(self, **query: dict[str, Any]) -> List[Track]:
+    def query(self, exclude_field: list[str] | str = None, **query: dict[str, Any]) -> List[Track]:
+        if exclude_field:
+            # If it's a single string, convert it to a list
+            if isinstance(exclude_field, str):
+                exclude_field = [exclude_field]
+            
+            # Create a projection dictionary where all fields are set to 0 (exclude)
+            projection = {field: 0 for field in exclude_field}
+        else:
+            projection = None
+    
         # Search for track by multiple fields and values using kwargs
-        return list(self._collection.find(query))
+        return list(self._collection.find(query, projection))
 
     @cast_as_track
     def get_all(self) -> List[Track]:
@@ -80,4 +94,5 @@ class TrackDatabase:
         self._collection.update_one({'id': track_id}, {'$set': result.model_dump(mode="json")})
 
     def get_all_ids(self) -> list[str]:
-        return [track.id for track in self.get_all()]
+        # Use projection to only retrieve the 'id' field
+        return [track["id"] for track in self._collection.find({}, {"id": 1, "_id": 0})]
