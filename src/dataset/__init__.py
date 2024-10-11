@@ -3,7 +3,7 @@ from .spotify import SpotifyClient, get_preview_data
 from .db import TrackDatabase
 from .queries import MongoQuery
 from .env import get_env_var
-from .mongo import use_mongo_docker
+from .mongo import MongoDocker
 
 def fill_db(database: TrackDatabase, spotify_client: SpotifyClient, genres: list[str], pages: int = 20) -> None:
     from tqdm import trange 
