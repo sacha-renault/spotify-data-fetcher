@@ -1,4 +1,4 @@
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, HttpUrl, Field
 from typing import List, Optional
 
 
@@ -56,5 +56,5 @@ class Track(BaseModel):
     track_number: int
     type: str
     uri: str
-    genre: str | None = None
+    genres: set[str] = Field(default_factory=set)
     data: str | None = None
