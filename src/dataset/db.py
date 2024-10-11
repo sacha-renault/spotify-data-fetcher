@@ -18,6 +18,7 @@ class TrackDatabase:
         self._client = MongoClient(db_uri)
         self._db = self._client[db_name]
         self._collection = self._db[collection_name]
+        self._collection.create_index("id", unique=True)
     
     def insert(self, track: Track) -> bool:
         # Check if a track with the same ID already exists
