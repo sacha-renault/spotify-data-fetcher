@@ -1,11 +1,13 @@
 import os
 import docker
+import atexit
 
 class MongoDocker:
     def __init__(self, path_volume: str):
         self.client = docker.from_env()
         self.path_volume = os.path.abspath(path_volume)
         self.container = None
+        atexit.register(self.terminate)
 
     def start(self):
         """Start the MongoDB Docker container."""
