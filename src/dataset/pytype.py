@@ -57,4 +57,8 @@ class Track(BaseModel):
     type: str
     uri: str
     genres: set[str] = Field(default_factory=set)
+    
+
+class TrackData(BaseModel):
+    id: str
     data: str | None = None
