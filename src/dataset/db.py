@@ -7,9 +7,9 @@ from .pytype import Track, TrackData
 
 def cast_as_model(func):
     @wraps(func)
-    def wrapper(*args, **kwargs):
-        result = func(*args, **kwargs)
-        model = args[0].model_class
+    def wrapper(self: Collection, *args, **kwargs):
+        result = func(self, *args, **kwargs)
+        model = self.model_class
         if isinstance(result, list):
             return [model.model_validate(document) for document in result]
         elif result is not None:
@@ -33,10 +33,7 @@ class Collection:
 
     def insert_many(self, documents: List[Any]) -> int:
         """Insert many documents and return the count of failed inserts."""
-        num_failed = 0
-        for document in documents:
-            if not self.insert(document):
-                num_failed += 1
+        num_failed = sum(0 if self.insert(doc) else 1 for doc in documents)
         return num_failed
 
     @cast_as_model
@@ -46,7 +43,7 @@ class Collection:
     
     @cast_as_model
     def get_all(self) -> Track | None:
-        """Get a document by its ID."""
+        """Get all documents in the collection."""
         return list(self._collection.find())
 
     @cast_as_model
