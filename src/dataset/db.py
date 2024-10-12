@@ -60,34 +60,29 @@ class Collection:
         return result.deleted_count > 0
     
     def get_all_ids(self) -> list[str]:
-        # Query only the 'id' field using the existing index and projection
+        # query id with hint and projection
         cursor = self._collection.find(
             {}, {"id": 1, "_id": 0}
         ).hint("id_1") 
 
-        # Collect and return the list of 'id' values
+        # return only id
         return [doc["id"] for doc in cursor]
     
 class MetaCollection(Collection):
+    """Collection specialized for metadat of tracks.
+    """
     def __init__(self, db):
         super().__init__(db, "tracks", Track)
 
     def insert(self, document: Track) -> bool:
-        # Step 1: Try to insert the document using $setOnInsert
-        result = self._collection.update_one(
-            {"id": document.id},  # Find by ID
-            {"$setOnInsert": document.model_dump(mode="json")},
-            upsert=True  # Insert if not exists
-        )
-
-        # Step 2: If the document already exists, update the genres
-        if result.upserted_id is None:  # If the document was not inserted, it already exists
+        # Try to insert new document
+        if not super().insert(document):
             self._collection.update_one(
                 {"id": document.id},  # Find by ID
                 {"$addToSet": {"genres": {"$each": list(document.genres)}}}  # Update genres
             )
-            return False
-        return True
+            return False # was an update
+        return True # was inserted
         
 class DataCollection(Collection):
     def __init__(self, db):
