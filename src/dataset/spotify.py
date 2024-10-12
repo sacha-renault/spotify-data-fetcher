@@ -17,12 +17,12 @@ def get_preview_data(track_or_url: Track | str) -> str:
     # Request the data from the URL
     try:
         result = requests.get(url)
-        result.raise_for_status()  # Raise an error for bad responses
+        result.raise_for_status()  # Raise an error if bad code
     except requests.exceptions.RequestException as e:
-        return None  # Return empty string or handle the error
+        return None  # TODO maybe add logging with debug for this
     
-    # Check if the request was successful and content is returned
-    if result.status_code == 200 and result.content:
+    # check if response has content
+    if result.content:
         # Base64 encode the binary data to store it in MongoDB as a string
         audio_base64 = base64.b64encode(result.content).decode('utf-8')
         return audio_base64
